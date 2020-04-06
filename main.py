@@ -21,72 +21,67 @@ import logging
 
 import StringIO
 import pythontidy as pt
-template_path=os.path.dirname(__file__) + "/templates"
-jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(template_path))
+
+template_path = os.path.dirname(__file__) + "/templates"
+jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(template_path))
 logging.debug("The path for templates is")
 logging.debug(template_path)
 
-class MainHandler(webapp2.RequestHandler):
 
+class MainHandler(webapp2.RequestHandler):
     def renderAndWrite(self, values, template="formater.html"):
         """render values in the template"""
         template = jinja_environment.get_template(template)
         self.response.out.write(template.render(values))
 
     def formater(self, pythonshit):
-        #- receive text in string format
-        #- convert it to file-like object
+        # - receive text in string format
+        # - convert it to file-like object
         inf = StringIO.StringIO()
         ouf = StringIO.StringIO()
         inf.write(pythonshit)
         inf.seek(0)
-        #- pass it through the tidyer
+        # - pass it through the tidyer
         pt.tidy_up(inf, ouf)
         pythonshit = ouf.getvalue()
-        #- return the output as string
+        # - return the output as string
         return pythonshit
 
     def post(self):
         """get receive text and prettyprint it"""
-        #- take the text from the request
-        txt = self.request.get('chorizo')
-        #- send it to the formater
+        # - take the text from the request
+        txt = self.request.get("chorizo")
+        # - send it to the formater
         bonitico = self.formater(txt)
-        #- and show a website with the pretty code 
+        # - and show a website with the pretty code
         self.renderAndWrite({"codechunk": bonitico})
-        
+
     def get(self):
         """shows just atext box for input"""
-        self.renderAndWrite({"codechunk" : "Aqui pegar tu python fulero"})
-        
+        self.renderAndWrite({"codechunk": "Aqui pegar tu python fulero"})
+
 
 class DownHandler(MainHandler):
     def post(self):
-        self.renderAndWrite({"codechunk" :
-                             self.formater(
-                                 self.request.get('chorizo'))})
-                             
+        self.renderAndWrite({"codechunk": self.formater(self.request.get("chorizo"))})
+
     def get(self):
-        self.response.out.write("""Visit this using POST to upload your code, and
-                                download it as a file""")
-        
+        self.response.out.write(
+            """Visit this using POST to upload your code, and
+                                download it as a file"""
+        )
+
 
 class ZenHandler(MainHandler):
     def post(self):
-        self.renderAndWrite({"codechunk" :
-                             self.formater(
-                                 self.request.get('chorizo'))},
-                           "zen.html")
-                             
+        self.renderAndWrite(
+            {"codechunk": self.formater(self.request.get("chorizo"))}, "zen.html"
+        )
+
     def get(self):
-        self.renderAndWrite({"codechunk" : "Here goes your Python"},
-                            "zen.html")
+        self.renderAndWrite({"codechunk": "Here goes your Python"}, "zen.html")
 
 
-
-app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/zen', ZenHandler),
-    ('/down', DownHandler)
-], debug=True)
+app = webapp2.WSGIApplication(
+    [("/", MainHandler), ("/zen", ZenHandler), ("/down", DownHandler)], debug=True
+)
